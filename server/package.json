@@ -7,7 +7,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed:admin": "node src/seed/createAdmin.js",
-    "seed:courses": "node src/seed/sampleCourses.js"
+    "seed:courses": "node src/seed/sampleCourses.js",
+    "test:auth": "node testAuth.js"
   },
   "keywords": [],
   "author": "",
