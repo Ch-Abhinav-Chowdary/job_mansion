@@ -37,8 +37,10 @@ export const AuthProvider = ({ children }) => {
   }, [setSession]);
 
   /** POST /auth/register → store session */
-  const register = useCallback(async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
+  const register = useCallback(async (name, email, password, phone) => {
+    const payload = { name, email, password };
+    if (phone) payload.phone = phone;
+    const { data } = await api.post('/auth/register', payload);
     setSession(data.data.accessToken, data.data.user);
     return data.data.user;
   }, [setSession]);

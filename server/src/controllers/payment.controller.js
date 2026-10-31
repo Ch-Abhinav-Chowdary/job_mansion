@@ -25,12 +25,14 @@ const createOrder = asyncHandler(async (req, res) => {
  * Authenticated user: Verifies payment HMAC signature and activates enrollment idempotently.
  */
 const verifyPayment = asyncHandler(async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  const orderId = req.body.razorpay_order_id || req.body.razorpayOrderId;
+  const paymentId = req.body.razorpay_payment_id || req.body.razorpayPaymentId;
+  const signature = req.body.razorpay_signature || req.body.razorpaySignature;
 
   const result = await paymentService.verifyPayment({
-    orderId: razorpay_order_id,
-    paymentId: razorpay_payment_id,
-    signature: razorpay_signature,
+    orderId,
+    paymentId,
+    signature,
     userId: req.user._id,
   });
 
