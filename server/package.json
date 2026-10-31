@@ -8,7 +8,9 @@
     "start": "node src/server.js",
     "seed:admin": "node src/seed/createAdmin.js",
     "seed:courses": "node src/seed/sampleCourses.js",
-    "test:auth": "node testAuth.js"
+    "test:auth": "node testAuth.js",
+    "test:courses": "node testCourses.js",
+    "test:payments": "node testPayments.js"
   },
   "keywords": [],
   "author": "",

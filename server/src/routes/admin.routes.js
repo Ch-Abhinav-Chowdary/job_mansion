@@ -28,7 +28,14 @@ router.post('/courses', validate(createCourseSchema), adminController.createCour
 router.put('/courses/:id', validate(updateCourseSchema), adminController.updateCourse);
 router.delete('/courses/:id', adminController.deleteCourse);
 
+const paymentController = require('../controllers/payment.controller');
+const { manualEnrollSchema } = require('../validators/payment.validator');
+
 // Admin Media Upload (Multer memory storage -> Cloudinary)
 router.post('/upload', handleSingleUpload('image'), adminController.uploadThumbnail);
+
+// Admin Payments & Enrollments
+router.post('/payments/:id/refund', paymentController.refundPayment);
+router.post('/enrollments', validate(manualEnrollSchema), paymentController.manualEnroll);
 
 module.exports = router;

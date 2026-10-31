@@ -57,6 +57,54 @@ const sendPasswordResetEmail = async (to, resetUrl) => {
   }
 };
 
+/**
+ * Send payment receipt email or log to console if email is not configured.
+ */
+const sendPaymentReceiptEmail = async (to, { courseTitle, amountInPaise, paymentId, date }) => {
+  const formattedAmount = `₹${(amountInPaise / 100).toLocaleString('en-IN')}`;
+
+  if (!transporter) {
+    console.log('\n========================================');
+    console.log('[EMAIL SERVICE - PAYMENT RECEIPT (DEV/LOG MODE)]');
+    console.log(`To:           ${to}`);
+    console.log(`Subject:      Payment Receipt for ${courseTitle} — Job Mansion`);
+    console.log(`Payment ID:   ${paymentId}`);
+    console.log(`Amount:       ${formattedAmount}`);
+    console.log(`Date:         ${date || new Date().toISOString()}`);
+    console.log('Status:       Payment Confirmed & Enrollment Activated');
+    console.log('========================================\n');
+    return { sent: false, loggedToConsole: true };
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Job Mansion" <${EMAIL_USER}>`,
+      to,
+      subject: `Payment Receipt: ${courseTitle} — Job Mansion`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #10b981;">Payment Received & Enrolled!</h2>
+          <p>Thank you for enrolling in <strong>${courseTitle}</strong> at Job Mansion.</p>
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Course:</strong> ${courseTitle}</p>
+            <p style="margin: 5px 0;"><strong>Amount Paid:</strong> ${formattedAmount}</p>
+            <p style="margin: 5px 0;"><strong>Payment ID:</strong> ${paymentId}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> Active</p>
+          </div>
+          <p>You can now log in to your dashboard to access all course lessons and materials.</p>
+        </div>
+      `,
+    });
+
+    console.log(`Payment receipt sent to ${to}: ${info.messageId}`);
+    return { sent: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Failed to send receipt email via SMTP:', error.message);
+    return { sent: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendPasswordResetEmail,
+  sendPaymentReceiptEmail,
 };

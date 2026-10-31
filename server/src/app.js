@@ -14,6 +14,13 @@ app.use(cors({
   origin: CLIENT_URL,
   credentials: true,
 }));
+// Webhook route requires raw body for HMAC signature verification before JSON parsing
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  require('./controllers/payment.controller').handleWebhook
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -27,7 +34,7 @@ app.get('/api/health', (req, res) => {
 // --- API routes ---
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
-// app.use('/api/payments', require('./routes/payment.routes'));
+app.use('/api/payments', require('./routes/payment.routes'));
 // app.use('/api/users', require('./routes/user.routes'));
 // app.use('/api/enquiries', require('./routes/enquiry.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
