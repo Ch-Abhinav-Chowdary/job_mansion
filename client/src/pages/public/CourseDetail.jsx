@@ -90,6 +90,9 @@ const CourseDetail = () => {
     });
   };
 
+  const [mockCheckoutOrder, setMockCheckoutOrder] = useState(null);
+  const [mockVerifying, setMockVerifying] = useState(false);
+
   // Handle Enrollment / Payment
   const handleEnroll = async () => {
     if (!isAuthenticated) {
@@ -104,15 +107,6 @@ const CourseDetail = () => {
 
     try {
       setPaying(true);
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        showToast({
-          message: 'Razorpay SDK failed to load. Please check your internet connection.',
-          type: 'error',
-        });
-        setPaying(false);
-        return;
-      }
 
       // Step 1: Create order on server
       const { data: orderRes } = await api.post('/payments/create-order', {
@@ -121,7 +115,28 @@ const CourseDetail = () => {
 
       const { orderId, amount, currency, keyId } = orderRes.data;
 
-      // Step 2: Open Razorpay Checkout modal
+      // Check if we are running with mock development keys
+      const isMock =
+        !keyId ||
+        keyId.includes('mock') ||
+        keyId.includes('placeholder') ||
+        orderId.startsWith('order_mock_');
+
+      if (isMock) {
+        setMockCheckoutOrder({ orderId, amount, currency, keyId });
+        return;
+      }
+
+      // Step 2: For real Razorpay test/live keys, load SDK and open popup
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        showToast({
+          message: 'Razorpay SDK failed to load. Please check your internet connection.',
+          type: 'error',
+        });
+        return;
+      }
+
       const options = {
         key: keyId,
         amount,
@@ -141,9 +156,9 @@ const CourseDetail = () => {
           try {
             // Step 3: Verify payment on server
             const verifyRes = await api.post('/payments/verify', {
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
             });
 
             if (verifyRes.data.success) {
@@ -179,6 +194,33 @@ const CourseDetail = () => {
       showToast({ message: msg, type: 'error' });
     } finally {
       setPaying(false);
+    }
+  };
+
+  const handleSimulatePayment = async () => {
+    if (!mockCheckoutOrder) return;
+    try {
+      setMockVerifying(true);
+      const verifyRes = await api.post('/payments/verify', {
+        razorpay_order_id: mockCheckoutOrder.orderId,
+        razorpay_payment_id: `pay_mock_${Date.now()}`,
+        razorpay_signature: 'mock_signature',
+      });
+
+      if (verifyRes.data.success) {
+        showToast({
+          message: 'Test payment verified! Enrollment activated.',
+          type: 'success',
+        });
+        setMockCheckoutOrder(null);
+        navigate(`/learn/${course.slug}`);
+      }
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || 'Payment simulation failed.';
+      showToast({ message: msg, type: 'error' });
+    } finally {
+      setMockVerifying(false);
     }
   };
 
@@ -590,6 +632,61 @@ const CourseDetail = () => {
           subtitle={`Attend an interactive introductory session for ${course.title}.`}
           onSuccess={() => setDemoModalOpen(false)}
         />
+      </Modal>
+
+      {/* Razorpay Test Checkout Simulation Modal (Development Mode) */}
+      <Modal
+        isOpen={!!mockCheckoutOrder}
+        onClose={() => setMockCheckoutOrder(null)}
+        title="Razorpay Test Checkout"
+      >
+        <div className="space-y-4">
+          <div className="p-3.5 rounded-sm bg-accent-soft/80 border border-border text-xs text-ink space-y-1">
+            <strong>Development Environment Notice:</strong>
+            <p className="text-muted leading-relaxed">
+              Razorpay keys in <code className="text-ink font-mono font-semibold">server/.env</code> are mock credentials (<code className="font-mono">rzp_test_mock_12345678</code>). Razorpay's live servers reject dummy keys with 401 Unauthorized.
+            </p>
+            <p className="text-muted leading-relaxed">
+              You can simulate checkout and verify signature activation right here. To enable Razorpay's official credit card / UPI popup, add real test keys from <strong className="text-ink">dashboard.razorpay.com</strong> into <code className="font-mono text-ink">server/.env</code>.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-sm bg-bg border border-border space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted">Course:</span>
+              <strong className="text-ink">{course.title}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted">Order ID:</span>
+              <span className="font-mono text-xs text-muted">{mockCheckoutOrder?.orderId}</span>
+            </div>
+            <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
+              <span className="text-ink">Amount:</span>
+              <span className="text-primary">{formatPrice(mockCheckoutOrder?.amount)}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              variant="primary"
+              loading={mockVerifying}
+              onClick={handleSimulatePayment}
+              className="w-full"
+            >
+              Simulate Successful Payment
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                showToast({ message: 'Payment cancelled.', type: 'warning' });
+                setMockCheckoutOrder(null);
+              }}
+              className="w-full text-muted hover:text-ink"
+            >
+              Cancel Payment
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -100,7 +100,11 @@ const refresh = asyncHandler(async (req, res) => {
   const token = req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (!token) {
-    throw new ApiError(401, 'Unauthorized: Refresh token is required');
+    return res.status(200).json({
+      success: false,
+      data: null,
+      message: 'No active session',
+    });
   }
 
   let decoded;

@@ -58,8 +58,12 @@ export const AuthProvider = ({ children }) => {
   const refresh = useCallback(async () => {
     try {
       const { data } = await api.post('/auth/refresh');
-      setSession(data.data.accessToken, data.data.user || user);
-      return data.data.accessToken;
+      if (data?.data?.accessToken) {
+        setSession(data.data.accessToken, data.data.user || user);
+        return data.data.accessToken;
+      }
+      clearSession();
+      return null;
     } catch (_) {
       clearSession();
       return null;
