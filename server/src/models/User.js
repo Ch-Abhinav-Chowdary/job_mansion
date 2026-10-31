@@ -36,17 +36,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    passwordResetTokenHash: {
+      type: String,
+      default: null,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Never return passwordHash or refreshTokenHash in JSON output
+// Never return passwordHash, refreshTokenHash, or reset tokens in JSON output
 userSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.passwordHash;
     delete ret.refreshTokenHash;
+    delete ret.passwordResetTokenHash;
+    delete ret.passwordResetExpires;
     return ret;
   },
 });
