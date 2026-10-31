@@ -1,0 +1,1 @@
+// Placeholder: JWT authentication middleware
