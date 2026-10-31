@@ -35,8 +35,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
 app.use('/api/payments', require('./routes/payment.routes'));
-// app.use('/api/users', require('./routes/user.routes'));
-// app.use('/api/enquiries', require('./routes/enquiry.routes'));
+app.use('/api/users', require('./routes/user.routes'));
+app.use('/api/enquiries', require('./routes/enquiry.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 
 // --- Central error handler (must be last) ---

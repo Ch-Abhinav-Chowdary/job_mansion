@@ -104,7 +104,39 @@ const sendPaymentReceiptEmail = async (to, { courseTitle, amountInPaise, payment
   }
 };
 
+/**
+ * Send a generic admin notification email or log to console if not configured.
+ */
+const sendAdminNotification = async (to, subject, bodyText) => {
+  if (!to) return; // No admin email set — skip silently
+
+  if (!transporter) {
+    console.log('\n========================================');
+    console.log('[EMAIL SERVICE - ADMIN NOTIFICATION (DEV/LOG MODE)]');
+    console.log(`To:      ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Body:\n${bodyText}`);
+    console.log('========================================\n');
+    return { sent: false, loggedToConsole: true };
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Job Mansion" <${EMAIL_USER}>`,
+      to,
+      subject,
+      text: bodyText,
+    });
+    console.log(`Admin notification sent to ${to}: ${info.messageId}`);
+    return { sent: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Failed to send admin notification email:', error.message);
+    return { sent: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendPasswordResetEmail,
   sendPaymentReceiptEmail,
+  sendAdminNotification,
 };
