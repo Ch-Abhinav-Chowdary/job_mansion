@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 
 // Layouts
 import PublicLayout from '../components/layout/PublicLayout';
+import AdminLayout from '../components/layout/AdminLayout';
 
 // Route guards
 import ProtectedRoute from './ProtectedRoute';
@@ -16,6 +17,8 @@ import Contact from '../pages/public/Contact';
 import Login from '../pages/public/Login';
 import Register from '../pages/public/Register';
 import ForgotPassword from '../pages/public/ForgotPassword';
+import ResetPassword from '../pages/public/ResetPassword';
+import NotFound from '../pages/public/NotFound';
 
 // User pages
 import Dashboard from '../pages/user/Dashboard';
@@ -33,7 +36,7 @@ import AdminPayments from '../pages/admin/Payments';
 import Enquiries from '../pages/admin/Enquiries';
 
 const router = createBrowserRouter([
-  // --- Public pages (with Navbar + Footer) ---
+  // --- Public pages (with PublicLayout) ---
   {
     element: <PublicLayout />,
     children: [
@@ -45,24 +48,62 @@ const router = createBrowserRouter([
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
       { path: '/forgot-password', element: <ForgotPassword /> },
+      { path: '/reset-password', element: <ResetPassword /> },
+
+      // --- Protected student pages (using PublicLayout) ---
+      {
+        path: '/dashboard',
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/my-courses',
+        element: (
+          <ProtectedRoute>
+            <MyCourses />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/learn/:courseSlug',
+        element: (
+          <ProtectedRoute>
+            <CoursePlayer />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/payments',
+        element: (
+          <ProtectedRoute>
+            <Payments />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/profile',
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
+
+      // Catch-all 404
+      { path: '*', element: <NotFound /> },
     ],
   },
 
-  // --- User pages (login required) ---
+  // --- Admin portal (AdminRoute + AdminLayout) ---
   {
-    element: <ProtectedRoute><PublicLayout /></ProtectedRoute>,
-    children: [
-      { path: '/dashboard', element: <Dashboard /> },
-      { path: '/my-courses', element: <MyCourses /> },
-      { path: '/learn/:courseId', element: <CoursePlayer /> },
-      { path: '/payments', element: <Payments /> },
-      { path: '/profile', element: <Profile /> },
-    ],
-  },
-
-  // --- Admin pages (admin role required) ---
-  {
-    element: <AdminRoute><PublicLayout /></AdminRoute>,
+    element: (
+      <AdminRoute>
+        <AdminLayout />
+      </AdminRoute>
+    ),
     children: [
       { path: '/admin', element: <AdminDashboard /> },
       { path: '/admin/courses', element: <AdminCourses /> },
