@@ -11,7 +11,7 @@ const app = express();
 // --- Security & parsing middleware ---
 app.use(helmet());
 app.use(cors({
-  origin: CLIENT_URL,
+  origin: true, // Reflects the request origin so 'credentials: true' works (browsers reject wildcard '*' with credentials)
   credentials: true,
 }));
 // Webhook route requires raw body for HMAC signature verification before JSON parsing

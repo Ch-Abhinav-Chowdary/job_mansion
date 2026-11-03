@@ -68,7 +68,9 @@ const Register = () => {
     } catch (err) {
       const msg =
         err.response?.data?.message ||
-        'Registration failed. An account with this email may already exist.';
+        (err.message === 'Network Error'
+          ? 'Unable to connect to server. The server may be waking up, please wait a moment and try again.'
+          : err.message || 'Registration failed. Please try again.');
       setError(msg);
       showToast({ message: msg, type: 'error' });
     } finally {
